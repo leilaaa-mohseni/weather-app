@@ -1,77 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Weather Forecast</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پیش‌بینی آب و هوا</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Weather Forecast</h1>
+    <div class="container">
+        <header>
+            <h1>پیش‌بینی آب و هوا</h1>
+            <div class="location-container">
+                <button id="detect-by-ip" class="btn">
+                    <i class="fas fa-map-marker-alt"></i> تشخیص با IP
+                </button>
+                <button id="detect-by-browser" class="btn">
+                    <i class="fas fa-location-arrow"></i> تشخیص با مرورگر
+                </button>
+                <div class="select-container">
+                    <select id="city-select">
+                        <option value="">انتخاب شهر...</option>
+                    </select>
+                </div>
+            </div>
+            <div id="detected-city" class="detected-city"></div>
+        </header>
 
-    <div class="controls">
-      <button id="location-btn">Use My Location</button>
+        <main>
+            <div class="current-weather">
+                <div class="weather-info">
+                    <h2 id="current-city">تهران</h2>
+                    <div class="temp-container">
+                        <span id="current-temp">25</span>
+                        <span class="temp-unit">°C</span>
+                    </div>
+                    <div id="current-condition">آفتابی</div>
+                    <div class="extra-info">
+                        <div><i class="fas fa-wind"></i> <span id="wind-speed">10</span> km/h</div>
+                        <div><i class="fas fa-tint"></i> <span id="humidity">50</span>%</div>
+                    </div>
+                </div>
+                <div class="weather-icon">
+                    <img id="current-icon" src="https://cdn.weatherapi.com/weather/64x64/day/113.png" alt="آب و هوا">
+                </div>
+            </div>
 
-      <div class="manual-search">
-        <input list="city-list" id="city-input" placeholder="Enter city name..." />
-        <datalist id="city-list">
-        <option value="Tehran"></option>
-        <option value="Alborz"></option>
-        <option value="Ardabil"></option>
-        <option value="Isfahan"></option>
-        <option value="Ilam"></option>
-        <option value="Bushehr"></option>
-        <option value="Chaharmahal and Bakhtiari"></option>
-        <option value="Fars"></option>
-        <option value="Gilan"></option>
-        <option value="Golestan"></option>
-        <option value="Hamadan"></option>
-        <option value="Hormozgan"></option>
-        <option value="Kerman"></option>
-        <option value="Kermanshah"></option>
-        <option value="Kohgiluyeh and Boyer-Ahmad"></option>
-        <option value="Kurdistan"></option>
-        <option value="Lorestan"></option>
-        <option value="Markazi"></option>
-        <option value="Mazandaran"></option>
-        <option value="North Khorasan"></option>
-        <option value="Qazvin"></option>
-        <option value="Qom"></option>
-        <option value="Razavi Khorasan"></option>
-        <option value="Semnan"></option>
-        <option value="Sistan and Baluchestan"></option>
-        <option value="South Khorasan"></option>
-        <option value="West Azerbaijan"></option>
-        <option value="Yazd"></option>
-        <option value="Zanjan"></option>
-        </datalist>
-        <button id="search-btn">Search</button>
-      </div>
+            <div class="hourly-section">
+                <div class="hourly-forecast" id="today-hourly">
+                    <h3><i class="fas fa-sun"></i> پیش‌بینی ساعتی امروز</h3>
+                    <div class="hourly-container"></div>
+                </div>
+
+                <div class="hourly-forecast" id="tomorrow-hourly">
+                    <h3><i class="fas fa-sun"></i> پیش‌بینی ساعتی فردا</h3>
+                    <div class="hourly-container"></div>
+                </div>
+            </div>
+
+            <div class="daily-forecast">
+                <h3><i class="fas fa-calendar-week"></i> پیش‌بینی 7 روز آینده</h3>
+                <div class="daily-container" id="daily-forecast"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>استفاده از سرویس‌های WeatherAPI و IPAPI</p>
+        </footer>
     </div>
 
-    <h2 id="city-name">Loading location...</h2>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>در حال دریافت اطلاعات...</p>
+    </div>
 
-    <section>
-      <h3>Hourly Forecast for Today</h3>
-      <div id="hourly-today" class="hourly-scroll"></div>
-    </section>
+    <div class="error-modal" id="error-modal">
+        <div class="modal-content">
+            <h3 id="error-title">خطا</h3>
+            <p id="error-message">متن خطا اینجا نمایش داده می‌شود</p>
+            <button id="close-error-modal" class="btn">متوجه شدم</button>
+        </div>
+    </div>
 
-    <section>
-      <h3>Hourly Forecast for Tomorrow</h3>
-      <div id="hourly-tomorrow" class="hourly-scroll"></div>
-    </section>
-
-    <section>
-      <h3>7-Day Forecast</h3>
-      <div id="daily" class="daily-grid"></div>
-    </section>
-  </div>
-
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
-
-
-
-

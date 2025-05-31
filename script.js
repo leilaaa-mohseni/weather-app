@@ -1,213 +1,294 @@
-// Elements
-const cityNameEl = document.getElementById("city-name");
-const hourlyTodayEl = document.getElementById("hourly-today");
-const hourlyTomorrowEl = document.getElementById("hourly-tomorrow");
-const dailyEl = document.getElementById("daily");
-const searchBtn = document.getElementById("search-btn");
-const locationBtn = document.getElementById("location-btn");
-const cityInput = document.getElementById("city-input");
+// API Key - باید از سایت weatherapi.com دریافت کنید
+const WEATHER_API_KEY = '2a6e5a0330954023b92200447253105';
 
-// On page load, try to detect location by IP
-window.addEventListener("load", () => {
-  detectLocationByIP();
-});
+// لیست کامل مراکز استان‌های ایران با مختصات
+const iranCities = [
+    { name: "آذربایجان شرقی - تبریز", lat: 38.0962, lon: 46.2738 },
+    { name: "آذربایجان غربی - ارومیه", lat: 37.5527, lon: 45.0759 },
+    { name: "اردبیل - اردبیل", lat: 38.2493, lon: 48.2963 },
+    { name: "اصفهان - اصفهان", lat: 32.6546, lon: 51.6680 },
+    { name: "البرز - کرج", lat: 35.8400, lon: 50.9391 },
+    { name: "ایلام - ایلام", lat: 33.2959, lon: 46.6705 },
+    { name: "بوشهر - بوشهر", lat: 28.9234, lon: 50.8203 },
+    { name: "تهران - تهران", lat: 35.6892, lon: 51.3890 },
+    { name: "چهارمحال و بختیاری - شهرکرد", lat: 32.3256, lon: 50.8645 },
+    { name: "خراسان جنوبی - بیرجند", lat: 32.8649, lon: 59.2262 },
+    { name: "خراسان رضوی - مشهد", lat: 36.2605, lon: 59.6168 },
+    { name: "خراسان شمالی - بجنورد", lat: 37.4751, lon: 57.3293 },
+    { name: "خوزستان - اهواز", lat: 31.3183, lon: 48.6706 },
+    { name: "زنجان - زنجان", lat: 36.6769, lon: 48.4963 },
+    { name: "سمنان - سمنان", lat: 35.5729, lon: 53.3975 },
+    { name: "سیستان و بلوچستان - زاهدان", lat: 29.4969, lon: 60.8629 },
+    { name: "فارس - شیراز", lat: 29.5926, lon: 52.5836 },
+    { name: "قزوین - قزوین", lat: 36.2797, lon: 50.0049 },
+    { name: "قم - قم", lat: 34.6399, lon: 50.8759 },
+    { name: "کردستان - سنندج", lat: 35.3219, lon: 46.9862 },
+    { name: "کرمان - کرمان", lat: 30.2839, lon: 57.0834 },
+    { name: "کرمانشاه - کرمانشاه", lat: 34.3142, lon: 47.0650 },
+    { name: "کهگیلویه و بویراحمد - یاسوج", lat: 30.6685, lon: 51.5880 },
+    { name: "گلستان - گرگان", lat: 36.8456, lon: 54.4393 },
+    { name: "گیلان - رشت", lat: 37.2808, lon: 49.5832 },
+    { name: "لرستان - خرم‌آباد", lat: 33.4871, lon: 48.3538 },
+    { name: "مازندران - ساری", lat: 36.5633, lon: 53.0601 },
+    { name: "مرکزی - اراک", lat: 34.0956, lon: 49.7009 },
+    { name: "هرمزگان - بندرعباس", lat: 27.1836, lon: 56.2666 },
+    { name: "همدان - همدان", lat: 34.7983, lon: 48.5146 },
+    { name: "یزد - یزد", lat: 31.8974, lon: 54.3569 }
+];
 
-// Manual city search
-searchBtn.addEventListener("click", () => {
-  const city = cityInput.value.trim();
-  if (city) {
-    getCoordinates(city);
-  }
-});
+// عناصر DOM
+const detectByIpBtn = document.getElementById('detect-by-ip');
+const detectByBrowserBtn = document.getElementById('detect-by-browser');
+const citySelect = document.getElementById('city-select');
+const detectedCityElement = document.getElementById('detected-city');
+const currentCityElement = document.getElementById('current-city');
+const currentTempElement = document.getElementById('current-temp');
+const currentConditionElement = document.getElementById('current-condition');
+const currentIconElement = document.getElementById('current-icon');
+const windSpeedElement = document.getElementById('wind-speed');
+const humidityElement = document.getElementById('humidity');
+const todayHourlyElement = document.getElementById('today-hourly');
+const tomorrowHourlyElement = document.getElementById('tomorrow-hourly');
+const dailyForecastElement = document.getElementById('daily-forecast');
+const loadingElement = document.getElementById('loading');
+const errorModal = document.getElementById('error-modal');
+const errorTitle = document.getElementById('error-title');
+const errorMessage = document.getElementById('error-message');
+const closeErrorModalBtn = document.getElementById('close-error-modal');
 
-locationBtn.addEventListener("click", () => {
-  if (navigator.geolocation) {
-    cityInput.value = ""; // پاک کردن ورودی شهر همیشه وقتی می‌خوای موقعیت بگیری
-    cityNameEl.textContent = "Getting your location...";
-    
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        cityNameEl.textContent = `Your Location (Browser)`;
-        fetchWeather(lat, lon);
-      },
-      (error) => {
-        // پیام خطا واضح‌تر
-        switch(error.code) {
-          case error.PERMISSION_DENIED:
-            alert("Permission to access location was denied.");
-            cityNameEl.textContent = "Permission denied for location.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            alert("Location information is unavailable.");
-            cityNameEl.textContent = "Location unavailable.";
-            break;
-          case error.TIMEOUT:
-            alert("Location request timed out.");
-            cityNameEl.textContent = "Location request timed out.";
-            break;
-          default:
-            alert("An unknown error occurred.");
-            cityNameEl.textContent = "Unknown location error.";
-            break;
-        }
-      }
-    );
-  } else {
-    alert("Your browser does not support Geolocation.");
-  }
-});
-
-function getWeekdayName(dateStr) {
-  const daysEn = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const date = new Date(dateStr);
-  return daysEn[date.getDay()];
+// پر کردن لیست شهرها
+function populateCitySelect() {
+    iranCities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = `${city.lat},${city.lon}`;
+        option.textContent = city.name;
+        citySelect.appendChild(option);
+    });
 }
 
-// --- Detect location by IP using ip-api.com ---
+// نمایش خطا در مودال
+function showError(title, message) {
+    errorTitle.textContent = title;
+    errorMessage.textContent = message;
+    errorModal.style.display = 'flex';
+}
+
+// بستن مودال خطا
+closeErrorModalBtn.addEventListener('click', () => {
+    errorModal.style.display = 'none';
+});
+
+// تشخیص موقعیت بر اساس IP
 async function detectLocationByIP() {
-  try {
-    cityNameEl.textContent = "Detecting location by IP...";
-    const res = await fetch("https://ip-api.com/json/?fields=status,message,city,country,lat,lon");
-    const data = await res.json();
-    if (data.status === "success") {
-      cityInput.value = ""; // Clear manual input on successful IP detect
-      cityNameEl.textContent = `${data.city}, ${data.country} (Based on IP)`;
-      fetchWeather(data.lat, data.lon);
+    showLoading();
+    try {
+        // استفاده از ip-api.com (رایگان)
+        const response = await fetch(`http://ip-api.com/json/?fields=status,message,lat,lon,city,country`);
+        const data = await response.json();
+        
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'خطا در دریافت موقعیت از IP');
+        }
+        
+        findNearestCity(data.lat, data.lon);
+    } catch (error) {
+        console.error("Error detecting location by IP:", error);
+        showError("خطا در تشخیص موقعیت", "خطا در تشخیص موقعیت با IP. لطفاً از روش دیگر استفاده کنید.");
+        hideLoading();
+    }
+}
+
+// تشخیص موقعیت کاربر با مرورگر
+function getUserLocationByBrowser() {
+    showLoading();
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                findNearestCity(latitude, longitude);
+            },
+            (error) => {
+                hideLoading();
+                handleLocationError(error);
+            },
+            { timeout: 10000 } // محدودیت زمانی 10 ثانیه
+        );
     } else {
-      cityNameEl.textContent = "Unable to detect location by IP.";
+        hideLoading();
+        showError("خطا", "مرورگر شما از قابلیت تشخیص موقعیت پشتیبانی نمی‌کند.");
     }
-  } catch (err) {
-    cityNameEl.textContent = "Error detecting location by IP.";
-    console.error(err);
-  }
 }
 
-// --- Get coordinates by city name using Open-Meteo Geocoding API ---
-async function getCoordinates(city) {
-  try {
-    cityNameEl.textContent = "Searching for city...";
-    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en`;
-    const geoRes = await fetch(geoUrl);
-    const geoData = await geoRes.json();
-    if (geoData.results && geoData.results.length > 0) {
-      const { latitude, longitude, name, country } = geoData.results[0];
-      cityNameEl.textContent = `${name}, ${country} (Searched)`;
-      fetchWeather(latitude, longitude);
+// یافتن نزدیک‌ترین شهر به مختصات کاربر
+function findNearestCity(userLat, userLon) {
+    let nearestCity = null;
+    let minDistance = Infinity;
+
+    iranCities.forEach(city => {
+        const distance = calculateDistance(userLat, userLon, city.lat, city.lon);
+        if (distance < minDistance) {
+            minDistance = distance;
+            nearestCity = city;
+        }
+    });
+
+    if (nearestCity) {
+        detectedCityElement.textContent = `نزدیک‌ترین مرکز استان: ${nearestCity.name}`;
+        citySelect.value = `${nearestCity.lat},${nearestCity.lon}`;
+        getWeatherData(`${nearestCity.lat},${nearestCity.lon}`);
     } else {
-      alert("City not found.");
-      cityNameEl.textContent = "City not found.";
+        hideLoading();
+        showError("خطا", "خطا در یافتن نزدیک‌ترین شهر.");
     }
-  } catch (err) {
-    console.error(err);
-    cityNameEl.textContent = "Error searching for city.";
-  }
 }
 
-// --- Fetch weather data ---
-async function fetchWeather(lat, lon) {
-  try {
-    cityNameEl.textContent += " | Loading weather forecast...";
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,windspeed_10m,weathercode&daily=temperature_2m_max,temperature_2m_min,windspeed_10m_max,weathercode&timezone=auto`;
-    const res = await fetch(url);
-    const data = await res.json();
-    displayWeather(data);
-  } catch (err) {
-    console.error(err);
-    cityNameEl.textContent = "Error fetching weather data.";
-  }
+// محاسبه فاصله بین دو نقطه جغرافیایی
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // شعاع زمین به کیلومتر
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
 }
 
-// --- Interpret weather codes from Open-Meteo ---
-function interpretWeatherCode(code) {
-  const weatherCodes = {
-    0: "Clear sky",
-    1: "Mainly clear",
-    2: "Partly cloudy",
-    3: "Overcast",
-    45: "Fog",
-    48: "Depositing rime fog",
-    51: "Light drizzle",
-    53: "Moderate drizzle",
-    55: "Dense drizzle",
-    61: "Slight rain",
-    63: "Moderate rain",
-    65: "Heavy rain",
-    66: "Light freezing rain",
-    67: "Heavy freezing rain",
-    71: "Slight snow fall",
-    73: "Moderate snow fall",
-    75: "Heavy snow fall",
-    77: "Snow grains",
-    80: "Slight rain showers",
-    81: "Moderate rain showers",
-    82: "Violent rain showers",
-    85: "Slight snow showers",
-    86: "Heavy snow showers",
-    95: "Thunderstorm",
-    96: "Thunderstorm with slight hail",
-    99: "Thunderstorm with heavy hail",
-  };
-  return weatherCodes[code] || "Unknown";
-}
-
-// --- Display weather ---
-function displayWeather(data) {
-  // Clear old data
-  hourlyTodayEl.innerHTML = "";
-  hourlyTomorrowEl.innerHTML = "";
-  dailyEl.innerHTML = "";
-
-  // Dates
-  const now = new Date();
-  const todayISO = now.toISOString().split("T")[0];
-  const tomorrowDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-  const tomorrowISO = tomorrowDate.toISOString().split("T")[0];
-
-  // Hourly data indexes
-  const { hourly, daily } = data;
-
-  // Split hourly data to today and tomorrow
-  hourly.time.forEach((timeStr, idx) => {
-    const datePart = timeStr.split("T")[0];
-    const hourPart = timeStr.split("T")[1].slice(0, 5); // HH:MM
-
-    const temp = hourly.temperature_2m[idx];
-    const wind = hourly.windspeed_10m[idx];
-    const code = hourly.weathercode[idx];
-    const codeDesc = interpretWeatherCode(code);
-
-    const hourBlock = document.createElement("div");
-    hourBlock.className = "hour-block";
-    hourBlock.innerHTML = `
-      <div><strong>${hourPart}</strong></div>
-      <div>${temp.toFixed(1)}°C</div>
-      <div>Wind: ${wind.toFixed(1)} km/h</div>
-      <div>${codeDesc}</div>
-    `;
-
-    if (datePart === todayISO) {
-      hourlyTodayEl.appendChild(hourBlock);
-    } else if (datePart === tomorrowISO) {
-      hourlyTomorrowEl.appendChild(hourBlock);
+// دریافت اطلاعات آب و هوا از API
+async function getWeatherData(location) {
+    try {
+        const response = await fetch(
+            `https://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API_KEY}&q=${location}&days=7&aqi=no&alerts=no&lang=fa`
+        );
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
+        
+        displayWeatherData(data);
+    } catch (error) {
+        console.error("Error fetching weather data:", error);
+        showError("خطا", "خطا در دریافت اطلاعات آب و هوا. لطفا دوباره تلاش کنید.");
+    } finally {
+        hideLoading();
     }
-  });
+}
 
-  daily.time.forEach((dateStr, idx) => {
-  const dayBlock = document.createElement("div");
-  dayBlock.className = "day-block";
+// نمایش اطلاعات آب و هوا
+function displayWeatherData(data) {
+    // اطلاعات فعلی
+    currentCityElement.textContent = data.location.name;
+    currentTempElement.textContent = Math.round(data.current.temp_c);
+    currentConditionElement.textContent = data.current.condition.text;
+    currentIconElement.src = `https:${data.current.condition.icon}`;
+    windSpeedElement.textContent = data.current.wind_kph;
+    humidityElement.textContent = data.current.humidity;
 
-  const weekdayName = getWeekdayName(dateStr);
+    // پیش‌بینی ساعتی امروز
+    displayHourlyForecast(data.forecast.forecastday[0].hour, todayHourlyElement.querySelector('.hourly-container'));
 
-  dayBlock.innerHTML = `
-    <div><strong>${weekdayName} (<span style="white-space: nowrap;">${dateStr}</span>)</strong></div>
-    <div>⬆: ${daily.temperature_2m_max[idx].toFixed(1)}°C</div>
-    <div>⬇: ${daily.temperature_2m_min[idx].toFixed(1)}°C</div>
-    <div>Max Wind: ${daily.windspeed_10m_max[idx].toFixed(1)} km/h</div>
-    <div>${interpretWeatherCode(daily.weathercode[idx])}</div>
-  `;
+    // پیش‌بینی ساعتی فردا (اگر موجود باشد)
+    if (data.forecast.forecastday[1]) {
+        displayHourlyForecast(data.forecast.forecastday[1].hour, tomorrowHourlyElement.querySelector('.hourly-container'));
+    }
 
-  dailyEl.appendChild(dayBlock);
+    // پیش‌بینی روزانه
+    displayDailyForecast(data.forecast.forecastday);
+}
+
+// در تابع displayHourlyForecast تغییرات زیر را اعمال کنید:
+function displayHourlyForecast(hourlyData, container) {
+    container.innerHTML = '';
+    
+    hourlyData.forEach(hour => {
+        const time = new Date(hour.time);
+        const hourItem = document.createElement('div');
+        hourItem.className = 'hourly-item';
+        hourItem.innerHTML = `
+            <div>${time.getHours()}:00</div>
+            <img src="https:${hour.condition.icon}" alt="${hour.condition.text}" width="40">
+            <div>${Math.round(hour.temp_c)}°C</div>
+            <div>${hour.condition.text}</div>
+            <div><i class="fas fa-wind"></i> ${hour.wind_kph} km/h ${getWindDirection(hour.wind_degree)}</div>
+        `;
+        container.appendChild(hourItem);
+    });
+}
+
+// تابع جدید برای تبدیل درجه باد به جهت
+function getWindDirection(degree) {
+    const directions = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+    const index = Math.round((degree % 360) / 45) % 8;
+    return directions[index];
+}
+// نمایش پیش‌بینی روزانه
+function displayDailyForecast(forecastData) {
+    dailyForecastElement.innerHTML = '';
+    
+    forecastData.forEach(day => {
+        const date = new Date(day.date);
+        const dayName = date.toLocaleDateString('fa-IR', { weekday: 'long' });
+        
+        const dayItem = document.createElement('div');
+        dayItem.className = 'daily-item';
+        dayItem.innerHTML = `
+            <div class="day">${dayName}</div>
+            <img src="https:${day.day.condition.icon}" alt="${day.day.condition.text}" width="30">
+            <div class="condition">${day.day.condition.text}</div>
+            <div class="temp">
+                <span>${Math.round(day.day.maxtemp_c)}°</span>
+                <span>${Math.round(day.day.mintemp_c)}°</span>
+            </div>
+        `;
+        dailyForecastElement.appendChild(dayItem);
+    });
+}
+
+// مدیریت خطاهای موقعیت‌یابی
+function handleLocationError(error) {
+    let errorMessage;
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            errorMessage = "دسترسی به موقعیت جغرافیایی رد شد. لطفا یک شهر را اتخاب کنید یا از مکان یابی با ip استفاده کنید.";
+            break;
+        case error.POSITION_UNAVAILABLE:
+            errorMessage = "اطلاعات موقعیت جغرافیایی در دسترس نیست.";
+            break;
+        case error.TIMEOUT:
+            errorMessage = "دریافت موقعیت جغرافیایی زمان‌بر شد.";
+            break;
+        case error.UNKNOWN_ERROR:
+            errorMessage = "خطای ناشناخته در دریافت موقعیت جغرافیایی.";
+            break;
+    }
+    showError("خطا در موقعیت‌یابی", errorMessage);
+}
+
+// نمایش اسپینر بارگذاری
+function showLoading() {
+    loadingElement.style.display = 'flex';
+}
+
+// مخفی کردن اسپینر بارگذاری
+function hideLoading() {
+    loadingElement.style.display = 'none';
+}
+
+// رویدادها
+document.addEventListener('DOMContentLoaded', () => {
+    populateCitySelect();
+    // به صورت پیش‌فرض با IP موقعیت را تشخیص می‌دهیم
+    detectLocationByIP();
 });
-}
+
+detectByIpBtn.addEventListener('click', detectLocationByIP);
+detectByBrowserBtn.addEventListener('click', getUserLocationByBrowser);
+
+citySelect.addEventListener('change', (e) => {
+    if (e.target.value) {
+        showLoading();
+        getWeatherData(e.target.value);
+    }
+});
