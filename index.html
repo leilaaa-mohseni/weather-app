@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weather Forecast</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Weather Forecast</h1>
+
+    <div class="controls">
+      <button id="location-btn">Use My Location</button>
+
+      <div class="manual-search">
+        <input list="city-list" id="city-input" placeholder="Enter city name..." />
+        <datalist id="city-list">
+        <option value="Tehran"></option>
+        <option value="Alborz"></option>
+        <option value="Ardabil"></option>
+        <option value="Isfahan"></option>
+        <option value="Ilam"></option>
+        <option value="Bushehr"></option>
+        <option value="Chaharmahal and Bakhtiari"></option>
+        <option value="Fars"></option>
+        <option value="Gilan"></option>
+        <option value="Golestan"></option>
+        <option value="Hamadan"></option>
+        <option value="Hormozgan"></option>
+        <option value="Kerman"></option>
+        <option value="Kermanshah"></option>
+        <option value="Kohgiluyeh and Boyer-Ahmad"></option>
+        <option value="Kurdistan"></option>
+        <option value="Lorestan"></option>
+        <option value="Markazi"></option>
+        <option value="Mazandaran"></option>
+        <option value="North Khorasan"></option>
+        <option value="Qazvin"></option>
+        <option value="Qom"></option>
+        <option value="Razavi Khorasan"></option>
+        <option value="Semnan"></option>
+        <option value="Sistan and Baluchestan"></option>
+        <option value="South Khorasan"></option>
+        <option value="Tehran"></option>
+        <option value="West Azerbaijan"></option>
+        <option value="Yazd"></option>
+        <option value="Zanjan"></option>
+        </datalist>
+        <button id="search-btn">Search</button>
+      </div>
+    </div>
+
+    <h2 id="city-name">Loading location...</h2>
+
+    <section>
+      <h3>Hourly Forecast for Today</h3>
+      <div id="hourly-today" class="hourly-scroll"></div>
+    </section>
+
+    <section>
+      <h3>Hourly Forecast for Tomorrow</h3>
+      <div id="hourly-tomorrow" class="hourly-scroll"></div>
+    </section>
+
+    <section>
+      <h3>7-Day Forecast</h3>
+      <div id="daily" class="daily-grid"></div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
