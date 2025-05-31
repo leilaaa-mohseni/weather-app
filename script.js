@@ -121,6 +121,7 @@ function findNearestCity(userLat, userLon) {
     });
 
     if (nearestCity) {
+         detectedCityElement.textContent = `نزدیک‌ترین مرکز استان: ${nearestCity.name}`;
         citySelect.value = `${nearestCity.lat},${nearestCity.lon}`;
         getWeatherData(`${nearestCity.lat},${nearestCity.lon}`);
     } else {
