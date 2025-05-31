@@ -133,7 +133,6 @@ function findNearestCity(userLat, userLon) {
     });
 
     if (nearestCity) {
-        detectedCityElement.textContent = `نزدیک‌ترین مرکز استان: ${nearestCity.name}`;
         citySelect.value = `${nearestCity.lat},${nearestCity.lon}`;
         getWeatherData(`${nearestCity.lat},${nearestCity.lon}`);
     } else {
@@ -223,7 +222,7 @@ function getWindDirection(degree) {
     const index = Math.round((degree % 360) / 45) % 8;
     return directions[index];
 }
-// نمایش پیش‌بینی روزانه
+
 function displayDailyForecast(forecastData) {
     dailyForecastElement.innerHTML = '';
     
@@ -238,8 +237,8 @@ function displayDailyForecast(forecastData) {
             <img src="https:${day.day.condition.icon}" alt="${day.day.condition.text}" width="30">
             <div class="condition">${day.day.condition.text}</div>
             <div class="temp">
-                <span>${Math.round(day.day.maxtemp_c)}°</span>
-                <span>${Math.round(day.day.mintemp_c)}°</span>
+                <span class="max-temp">${Math.round(day.day.maxtemp_c)}°</span>
+                <span class="min-temp">${Math.round(day.day.mintemp_c)}°</span>
             </div>
         `;
         dailyForecastElement.appendChild(dayItem);
