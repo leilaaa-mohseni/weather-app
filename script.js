@@ -59,6 +59,12 @@ locationBtn.addEventListener("click", () => {
   }
 });
 
+function getWeekdayName(dateStr) {
+  const daysEn = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const date = new Date(dateStr);
+  return daysEn[date.getDay()];
+}
+
 // --- Detect location by IP using ip-api.com ---
 async function detectLocationByIP() {
   try {
@@ -188,19 +194,20 @@ function displayWeather(data) {
     }
   });
 
-  // Daily forecast
   daily.time.forEach((dateStr, idx) => {
-    const dayBlock = document.createElement("div");
-    dayBlock.className = "day-block";
+  const dayBlock = document.createElement("div");
+  dayBlock.className = "day-block";
 
-    dayBlock.innerHTML = `
-      <div><strong>${dateStr}</strong></div>
-      <div>Max: ${daily.temperature_2m_max[idx].toFixed(1)}°C</div>
-      <div>Min: ${daily.temperature_2m_min[idx].toFixed(1)}°C</div>
-      <div>Max Wind: ${daily.windspeed_10m_max[idx].toFixed(1)} km/h</div>
-      <div>${interpretWeatherCode(daily.weathercode[idx])}</div>
-    `;
+  const weekdayName = getWeekdayName(dateStr);
 
-    dailyEl.appendChild(dayBlock);
-  });
+  dayBlock.innerHTML = `
+    <div><strong>${weekdayName} (<span style="white-space: nowrap;">${dateStr}</span>)</strong></div>
+    <div>⬆: ${daily.temperature_2m_max[idx].toFixed(1)}°C</div>
+    <div>⬇: ${daily.temperature_2m_min[idx].toFixed(1)}°C</div>
+    <div>Max Wind: ${daily.windspeed_10m_max[idx].toFixed(1)} km/h</div>
+    <div>${interpretWeatherCode(daily.weathercode[idx])}</div>
+  `;
+
+  dailyEl.appendChild(dayBlock);
+});
 }
