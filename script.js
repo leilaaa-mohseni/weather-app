@@ -1,7 +1,4 @@
-// API Key - باید از سایت weatherapi.com دریافت کنید
 const WEATHER_API_KEY = '2a6e5a0330954023b92200447253105';
-
-// لیست کامل مراکز استان‌های ایران با مختصات
 const iranCities = [
     { name: "آذربایجان شرقی - تبریز", lat: 38.0962, lon: 46.2738 },
     { name: "آذربایجان غربی - ارومیه", lat: 37.5527, lon: 45.0759 },
@@ -36,7 +33,6 @@ const iranCities = [
     { name: "یزد - یزد", lat: 31.8974, lon: 54.3569 }
 ];
 
-// عناصر DOM
 const detectByIpBtn = document.getElementById('detect-by-ip');
 const detectByBrowserBtn = document.getElementById('detect-by-browser');
 const citySelect = document.getElementById('city-select');
@@ -56,7 +52,6 @@ const errorTitle = document.getElementById('error-title');
 const errorMessage = document.getElementById('error-message');
 const closeErrorModalBtn = document.getElementById('close-error-modal');
 
-// پر کردن لیست شهرها
 function populateCitySelect() {
     iranCities.forEach(city => {
         const option = document.createElement('option');
@@ -66,23 +61,19 @@ function populateCitySelect() {
     });
 }
 
-// نمایش خطا در مودال
 function showError(title, message) {
     errorTitle.textContent = title;
     errorMessage.textContent = message;
     errorModal.style.display = 'flex';
 }
 
-// بستن مودال خطا
 closeErrorModalBtn.addEventListener('click', () => {
     errorModal.style.display = 'none';
 });
 
-// تشخیص موقعیت بر اساس IP
 async function detectLocationByIP() {
     showLoading();
     try {
-        // استفاده از ip-api.com (رایگان)
         const response = await fetch(`http://ip-api.com/json/?fields=status,message,lat,lon,city,country`);
         const data = await response.json();
         
@@ -97,8 +88,6 @@ async function detectLocationByIP() {
         hideLoading();
     }
 }
-
-// تشخیص موقعیت کاربر با مرورگر
 function getUserLocationByBrowser() {
     showLoading();
     if (navigator.geolocation) {
@@ -111,7 +100,7 @@ function getUserLocationByBrowser() {
                 hideLoading();
                 handleLocationError(error);
             },
-            { timeout: 10000 } // محدودیت زمانی 10 ثانیه
+            { timeout: 10000 } 
         );
     } else {
         hideLoading();
@@ -119,7 +108,6 @@ function getUserLocationByBrowser() {
     }
 }
 
-// یافتن نزدیک‌ترین شهر به مختصات کاربر
 function findNearestCity(userLat, userLon) {
     let nearestCity = null;
     let minDistance = Infinity;
@@ -141,9 +129,8 @@ function findNearestCity(userLat, userLon) {
     }
 }
 
-// محاسبه فاصله بین دو نقطه جغرافیایی
 function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // شعاع زمین به کیلومتر
+    const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 
@@ -154,7 +141,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// دریافت اطلاعات آب و هوا از API
 async function getWeatherData(location) {
     try {
         const response = await fetch(
@@ -175,29 +161,20 @@ async function getWeatherData(location) {
     }
 }
 
-// نمایش اطلاعات آب و هوا
 function displayWeatherData(data) {
-    // اطلاعات فعلی
     currentCityElement.textContent = data.location.name;
     currentTempElement.textContent = Math.round(data.current.temp_c);
     currentConditionElement.textContent = data.current.condition.text;
     currentIconElement.src = `https:${data.current.condition.icon}`;
     windSpeedElement.textContent = data.current.wind_kph;
     humidityElement.textContent = data.current.humidity;
-
-    // پیش‌بینی ساعتی امروز
     displayHourlyForecast(data.forecast.forecastday[0].hour, todayHourlyElement.querySelector('.hourly-container'));
-
-    // پیش‌بینی ساعتی فردا (اگر موجود باشد)
     if (data.forecast.forecastday[1]) {
         displayHourlyForecast(data.forecast.forecastday[1].hour, tomorrowHourlyElement.querySelector('.hourly-container'));
     }
-
-    // پیش‌بینی روزانه
     displayDailyForecast(data.forecast.forecastday);
 }
 
-// در تابع displayHourlyForecast تغییرات زیر را اعمال کنید:
 function displayHourlyForecast(hourlyData, container) {
     container.innerHTML = '';
     
@@ -216,7 +193,6 @@ function displayHourlyForecast(hourlyData, container) {
     });
 }
 
-// تابع جدید برای تبدیل درجه باد به جهت
 function getWindDirection(degree) {
     const directions = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
     const index = Math.round((degree % 360) / 45) % 8;
@@ -245,7 +221,6 @@ function displayDailyForecast(forecastData) {
     });
 }
 
-// مدیریت خطاهای موقعیت‌یابی
 function handleLocationError(error) {
     let errorMessage;
     switch(error.code) {
@@ -265,20 +240,16 @@ function handleLocationError(error) {
     showError("خطا در موقعیت‌یابی", errorMessage);
 }
 
-// نمایش اسپینر بارگذاری
 function showLoading() {
     loadingElement.style.display = 'flex';
 }
 
-// مخفی کردن اسپینر بارگذاری
 function hideLoading() {
     loadingElement.style.display = 'none';
 }
 
-// رویدادها
 document.addEventListener('DOMContentLoaded', () => {
     populateCitySelect();
-    // به صورت پیش‌فرض با IP موقعیت را تشخیص می‌دهیم
     detectLocationByIP();
 });
 
