@@ -20,9 +20,11 @@ searchBtn.addEventListener("click", () => {
   }
 });
 
-// Use Geolocation API from browser
 locationBtn.addEventListener("click", () => {
   if (navigator.geolocation) {
+    cityInput.value = ""; // پاک کردن ورودی شهر همیشه وقتی می‌خوای موقعیت بگیری
+    cityNameEl.textContent = "Getting your location...";
+    
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = pos.coords.latitude;
@@ -30,8 +32,26 @@ locationBtn.addEventListener("click", () => {
         cityNameEl.textContent = `Your Location (Browser)`;
         fetchWeather(lat, lon);
       },
-      () => {
-        alert("Unable to access location or permission denied.");
+      (error) => {
+        // پیام خطا واضح‌تر
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            alert("Permission to access location was denied.");
+            cityNameEl.textContent = "Permission denied for location.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            alert("Location information is unavailable.");
+            cityNameEl.textContent = "Location unavailable.";
+            break;
+          case error.TIMEOUT:
+            alert("Location request timed out.");
+            cityNameEl.textContent = "Location request timed out.";
+            break;
+          default:
+            alert("An unknown error occurred.");
+            cityNameEl.textContent = "Unknown location error.";
+            break;
+        }
       }
     );
   } else {
@@ -43,9 +63,10 @@ locationBtn.addEventListener("click", () => {
 async function detectLocationByIP() {
   try {
     cityNameEl.textContent = "Detecting location by IP...";
-    const res = await fetch("http://ip-api.com/json/?fields=status,message,city,country,lat,lon");
+    const res = await fetch("https://ip-api.com/json/?fields=status,message,city,country,lat,lon");
     const data = await res.json();
     if (data.status === "success") {
+      cityInput.value = ""; // Clear manual input on successful IP detect
       cityNameEl.textContent = `${data.city}, ${data.country} (Based on IP)`;
       fetchWeather(data.lat, data.lon);
     } else {
@@ -120,85 +141,66 @@ function interpretWeatherCode(code) {
     86: "Heavy snow showers",
     95: "Thunderstorm",
     96: "Thunderstorm with slight hail",
-    99: "Thunderstorm with heavy hail"
+    99: "Thunderstorm with heavy hail",
   };
   return weatherCodes[code] || "Unknown";
 }
 
-// --- Display weather data ---
+// --- Display weather ---
 function displayWeather(data) {
+  // Clear old data
   hourlyTodayEl.innerHTML = "";
   hourlyTomorrowEl.innerHTML = "";
   dailyEl.innerHTML = "";
 
-  const times = data.hourly.time;
-  const temps = data.hourly.temperature_2m;
-  const winds = data.hourly.windspeed_10m;
-  const codes = data.hourly.weathercode;
+  // Dates
+  const now = new Date();
+  const todayISO = now.toISOString().split("T")[0];
+  const tomorrowDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const tomorrowISO = tomorrowDate.toISOString().split("T")[0];
 
-  const dailyTimes = data.daily.time;
-  const dailyMaxTemps = data.daily.temperature_2m_max;
-  const dailyMinTemps = data.daily.temperature_2m_min;
-  const dailyWinds = data.daily.windspeed_10m_max;
-  const dailyCodes = data.daily.weathercode;
+  // Hourly data indexes
+  const { hourly, daily } = data;
 
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
+  // Split hourly data to today and tomorrow
+  hourly.time.forEach((timeStr, idx) => {
+    const datePart = timeStr.split("T")[0];
+    const hourPart = timeStr.split("T")[1].slice(0, 5); // HH:MM
 
-  // Format date as yyyy-mm-dd
-  function formatDate(date) {
-    return date.toISOString().split("T")[0];
-  }
+    const temp = hourly.temperature_2m[idx];
+    const wind = hourly.windspeed_10m[idx];
+    const code = hourly.weathercode[idx];
+    const codeDesc = interpretWeatherCode(code);
 
-  // Hourly forecast for today
-  times.forEach((t, i) => {
-    const d = t.split("T")[0];
-    if (d === formatDate(today)) {
-      const el = document.createElement("div");
-      el.className = "hour-block";
-      el.innerHTML = `
-        <strong>${t.slice(11,16)}</strong><br>
-        ${interpretWeatherCode(codes[i])}<br>
-        🌡 ${temps[i]}°C<br>
-        💨 ${winds[i]} km/h
-      `;
-      hourlyTodayEl.appendChild(el);
-    }
-  });
-
-  // Hourly forecast for tomorrow
-  times.forEach((t, i) => {
-    const d = t.split("T")[0];
-    if (d === formatDate(tomorrow)) {
-      const el = document.createElement("div");
-      el.className = "hour-block";
-      el.innerHTML = `
-        <strong>${t.slice(11,16)}</strong><br>
-        ${interpretWeatherCode(codes[i])}<br>
-        🌡 ${temps[i]}°C<br>
-        💨 ${winds[i]} km/h
-      `;
-      hourlyTomorrowEl.appendChild(el);
-    }
-  });
-
-  // 7-day forecast
-  dailyTimes.forEach((d, i) => {
-    const date = new Date(d);
-    const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
-    const el = document.createElement("div");
-    el.className = "day-block";
-    el.innerHTML = `
-      <strong>${dayName}</strong><br>
-      <small>${date.toLocaleDateString("en-US")}</small><br>
-      ${interpretWeatherCode(dailyCodes[i])}<br>
-      ⬆ ${dailyMaxTemps[i]}°C<br>
-      ⬇ ${dailyMinTemps[i]}°C<br>
-      💨 ${dailyWinds[i]} km/h
+    const hourBlock = document.createElement("div");
+    hourBlock.className = "hour-block";
+    hourBlock.innerHTML = `
+      <div><strong>${hourPart}</strong></div>
+      <div>${temp.toFixed(1)}°C</div>
+      <div>Wind: ${wind.toFixed(1)} km/h</div>
+      <div>${codeDesc}</div>
     `;
-    dailyEl.appendChild(el);
+
+    if (datePart === todayISO) {
+      hourlyTodayEl.appendChild(hourBlock);
+    } else if (datePart === tomorrowISO) {
+      hourlyTomorrowEl.appendChild(hourBlock);
+    }
   });
 
-  cityNameEl.textContent = cityNameEl.textContent.replace(/\| Loading weather forecast\.\.\./g, "");
+  // Daily forecast
+  daily.time.forEach((dateStr, idx) => {
+    const dayBlock = document.createElement("div");
+    dayBlock.className = "day-block";
+
+    dayBlock.innerHTML = `
+      <div><strong>${dateStr}</strong></div>
+      <div>Max: ${daily.temperature_2m_max[idx].toFixed(1)}°C</div>
+      <div>Min: ${daily.temperature_2m_min[idx].toFixed(1)}°C</div>
+      <div>Max Wind: ${daily.windspeed_10m_max[idx].toFixed(1)} km/h</div>
+      <div>${interpretWeatherCode(daily.weathercode[idx])}</div>
+    `;
+
+    dailyEl.appendChild(dayBlock);
+  });
 }
