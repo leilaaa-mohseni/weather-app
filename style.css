@@ -303,48 +303,25 @@ footer {
     100% { transform: rotate(360deg); }
 }
 
-/* حالت موبایل */
 @media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
-
-    .current-weather {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .weather-info {
-        text-align: center;
-        margin-bottom: 15px;
-    }
-
-    .location-container {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .select-container {
-        width: 100%;
-    }
-
-    .hourly-container {
-        gap: 10px;
-    }
-
-    .hourly-item {
-        min-width: 80px;
-        font-size: 14px;
-    }
+    /* ... سایر استایل‌های موجود ... */
 
     .daily-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
+        flex-direction: row; /* تغییر از column به row */
+        align-items: center; /* تراز عمودی به مرکز */
+        gap: 10px; /* فاصله بین عناصر */
+        padding: 12px 0; /* padding مناسب */
     }
 
     .daily-item .temp {
-        width: 100%;
-        justify-content: space-between;
+        width: auto; /* عرض خودکار */
+        justify-content: flex-end; /* تراز به راست */
+        gap: 15px; /* فاصله بین دو عدد دما */
+    }
+
+    .daily-item .condition {
+        text-align: left; /* تراز متن به چپ */
+        flex-grow: 0; /* عدم گسترش خودکار */
+        min-width: 100px; /* حداقل عرض برای شرایط آب و هوا */
     }
 }
