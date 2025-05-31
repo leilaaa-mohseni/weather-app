@@ -1,4 +1,4 @@
-/* Reset و فونت‌ها */
+
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
 
 * {
@@ -304,24 +304,23 @@ footer {
 }
 
 @media (max-width: 768px) {
-    /* ... سایر استایل‌های موجود ... */
 
     .daily-item {
-        flex-direction: row; /* تغییر از column به row */
-        align-items: center; /* تراز عمودی به مرکز */
-        gap: 10px; /* فاصله بین عناصر */
-        padding: 12px 0; /* padding مناسب */
+        flex-direction: row; 
+        align-items: center; 
+        gap: 10px; 
+        padding: 12px 0; 
     }
 
     .daily-item .temp {
-        width: auto; /* عرض خودکار */
-        justify-content: flex-end; /* تراز به راست */
-        gap: 15px; /* فاصله بین دو عدد دما */
+        width: auto;
+        justify-content: flex-end; 
+        gap: 15px;
     }
 
     .daily-item .condition {
-        text-align: left; /* تراز متن به چپ */
-        flex-grow: 0; /* عدم گسترش خودکار */
-        min-width: 100px; /* حداقل عرض برای شرایط آب و هوا */
+        text-align: left; 
+        flex-grow: 0;
+        min-width: 100px; 
     }
 }
